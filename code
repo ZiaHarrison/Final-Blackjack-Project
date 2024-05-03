@@ -1,0 +1,297 @@
+
+from collections import namedtuple
+import random
+
+JACK = 12
+QUEEN = 13
+KING = 14
+ACE = 11
+
+SPADE = 1
+DIAMOND = 2
+HEART = 3
+CLUB = 4
+
+def createCard(suit, value):
+    #makes the 'base' (tuple) for the cards
+    Card = namedtuple('Card', ['suit', 'value'])
+    C = Card(suit, value)
+    return C
+
+
+def printCard(Card):
+    #translates from the compute values for the cards to the values we use
+    suit = int(Card[0])
+    value = int(Card[1])
+    if suit == SPADE:
+        cardSuit = 'spade'
+    elif suit == DIAMOND:
+        cardSuit = 'diamond'
+    elif suit == HEART:
+        cardSuit = 'heart'
+    else:
+        cardSuit = 'clubs'
+        
+    if value == JACK:
+        cardValue = 'jack'
+    elif value == QUEEN:
+        cardValue = 'queen'
+    elif value == KING:
+        cardValue = 'king'
+    elif value == 2:
+        cardValue = 'two'
+    elif value == 3:
+        cardValue = 'three'
+    elif value == 4:
+        cardValue = 'four'
+    elif value == 5:
+        cardValue = 'five'
+    elif value == 6:
+        cardValue = 'six'
+    elif value == 7:
+        cardValue = 'seven'
+    elif value == 8:
+        cardValue = 'eight'
+    elif value == 9:
+        cardValue = 'nine'
+    elif value == 10:
+        cardValue = 'ten'
+    else:
+        cardValue = 'ace'
+    return(f'{cardValue} of {cardSuit}')
+
+
+def createDeck():
+    #loops through two loops to make all 52 cards
+    deck = []
+    for suit in range(SPADE, CLUB + 1):
+        #range 1 - 4
+        for value in range(2, KING + 1): ##
+            #range 1 - 13
+            deck.append(createCard(suit, value))
+            #should return (ex. suit = 2, value = 7)
+    return deck
+
+
+def printCards(deck):
+    #translates one card
+    for card in deck:
+        print(printCard(card))
+        
+        
+def shuffleCards(deck):
+    #once you've made the deck this switches up the order
+    temp = 0
+    for i in range(len(deck) - 1):
+        randomCard = random.randint(0, 51)
+        temp = deck[i]
+        deck[i] = deck[randomCard]
+        deck[randomCard] = temp
+    return deck
+
+
+def dealHand(deck):
+    #gives out the top two cards from the deck
+    newDeck = []
+    card1 = deck.pop(0)
+    #card1 = createCard(1, 11)
+    #card2 = createCard(1, 4)
+    newDeck.append(card1)
+    card2 = deck.pop(0)
+    newDeck.append(card2)
+    return newDeck
+
+#returns a list
+
+def printHands(user, dealer):
+    #prints out both cards that it delt to the user
+    print("\nUser's hand:\n", end="")
+    printCards(user)
+    print()
+    #and the first card it delt to the dealer
+    print(f'Dealer shows:\n{printCard(dealer[0])}')
+
+def dealToUser(user, dealer, deck):
+    answer = str(input("\nhit or stand?\n"))
+    score = computeSum(user)
+ 
+    while ((answer == 'hit' or answer == 'Hit') and score < 21):
+        #lets the user keep hitting(adding to the user's hand) until they hit 21
+        card = deck[0]
+        deck.pop(0)
+        user.append(card)
+        printHands(user, dealer)
+        score = computeSum(user)
+        print()
+        #print('user\'s current total:', score)
+        if score < 21:
+            answer = str(input("\nHit or stand?\n"))
+
+
+def computeSum(user):
+    #partI: just takes the card's value (or sets it equal to 10) and adds that to the sum of the cards' value
+    sum = 0
+    for card in user:
+        value = int(card.value)
+        if value > 11:
+            sum += 10
+        else:
+            sum += value
+    #part II: if there are aces in either hand, this makes the value of the aces one
+    #but if there are multiple aces then the value of the final ace can stay at 11
+    aces = countAce(user)
+    while sum > 21 and aces > 0:
+        aces -= 1 
+        sum -= 10
+        
+    return sum
+
+def countAce(hand):
+    #this function counts the number of aces in one of the player's hands
+    ace = 0
+    for card in hand:
+        if int(card.value) == ACE:
+            ace += 1
+    return ace
+
+
+def dealToDealer(dealer, deck, value, user):
+    #after the user has played, this function deals to the dealer so long at the sum of the dealers cards is les than 17
+    print('dealing to dealer...')
+   # printCards(dealer)
+    score = computeSum(dealer)
+    #print(score)
+    
+    while score < 17:
+        #get new card 
+        card = deck[0]
+        dealer.append(card)
+        deck.pop(0)
+        print('dealer hits')
+
+        
+        
+        #change score
+        score = computeSum(dealer)
+    #print("Final Dealer Hand:")
+        printCards(dealer)
+        print(f'Dealer total is: {score}')
+    
+    if score < 21:
+        printCards(dealer)
+        print(f'Dealer total is: {score}')
+        print("dealer stays")       
+    
+    
+def winner(userscore, dealerscore, userHand, dealerHand):
+    #this function finds and declares the winner(checks who is closer to 21)
+    print()
+    #print('Final hands:')
+    #printHands(userHand, dealerHand)
+    if userscore > dealerscore and userscore <= 21:
+        print("user wins!")
+    elif dealerscore > 21 and userscore < 21:
+        print("user wins!")
+    elif dealerscore == userscore:
+        print('you tied')
+    else:
+        print("user loses :(")
+
+
+def startDeck():
+    #make the deck
+    deck = createDeck()
+    #printCards(deck)
+  
+    # 2. shuffle
+    shuffleCards(deck)
+    #print("\nshuffled:")
+    return (deck)
+
+
+def discard(usedCards, user, dealer):
+    #this adds the users hand and the dealers hand to the discard at the end of each game
+    for card in user:
+        usedCards.append(card)
+    for card in dealer:
+        usedCards.append(card)
+    return usedCards
+
+
+def checkDeck(deck, usedCards):
+    #this adds the rest of the deck to the discard and shuffles once there are 8 cards left in the deck
+    if len(deck)< 8:
+        for card in deck:    
+            usedCards.append(card)
+        newDeck = shuffleCards(usedCards)
+        usedCards = []
+        return newDeck, usedCards
+    return deck, usedCards
+
+def play(deck, usedCards): # for discard pile
+#here is the function to play the main body of the game(dealers to user and dealer, computes sum, declares the winner, and adds to teh discard)
+#it also checks after each time dealing cards to see if either user has gone over 21 and ends the game if that happens
+    # deal hands
+    userHand = dealHand(deck)
+    dealerHand = dealHand(deck)
+    print('dealing hands...', end = "")
+    printHands(userHand, dealerHand)
+    if computeSum(dealerHand) >= 21 or computeSum(userHand) >= 21:
+        winner(computeSum(userHand), computeSum(dealerHand), userHand, dealerHand)
+        
+    else:
+        
+    # deal to user
+        dealToUser(userHand, dealerHand, deck)
+        #print("User's current hand:")
+        #printCards(userHand)
+        print()
+        #print("pre aces", computeSum(userHand))
+    
+    # compute hand value
+        userHandValue = computeSum(userHand)
+
+        #print("deck length", len(deck))
+        print(f"User total is: {userHandValue}")
+        
+        dealerHandValue = computeSum(dealerHand)
+        
+        if userHandValue < 21:
+    # deal to dealer
+            dealToDealer(dealerHand, deck, userHandValue, userHand)
+    #re-print user total
+            print(f"User total is: {userHandValue}")
+            dealerHandValue = computeSum(dealerHand) 
+    
+    
+#declaring the winner
+        winner(userHandValue, dealerHandValue, userHand, dealerHand)
+        print()
+        
+    #adjusting the discard: adding used cards to discard
+    usedCards = discard(usedCards, userHand, dealerHand)
+    
+    #checking the deck lenght to see if we have to shuffle
+    deck, usedCards = checkDeck(deck, usedCards) 
+    
+    return deck, usedCards
+
+#### YOUR FUNCTIONS ABOVE HERE
+
+def main():
+#creates the original deck and allows the players to play mulitple rounds
+    deck = startDeck()
+#printCards(deck)
+    usedCards = []
+    play(deck, usedCards)
+    
+#asking for a new game
+    playagain = str(input("Do you want to play again?\n\t"))
+    #loop to keep playing as long as the user wants to
+    while not (playagain == 'no' or playagain == 'No'):
+        deck, usedCards = play(deck, usedCards)
+        playagain = str(input("Do you want to play again?\n"))
+    #to end game
+    print("goodbye!")
+    
+main()
